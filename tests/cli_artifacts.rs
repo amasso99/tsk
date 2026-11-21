@@ -243,6 +243,24 @@ fn status_artifacts_land_on_the_new_round_and_survive_it() {
     assert_eq!(rows[0]["target"], shot);
     assert_eq!(rows[0]["round"], 1, "the old artifact keeps its round");
     assert_eq!(rows[1]["round"], 0, "a plain add has no round");
+
+    // Attaching the same target on a later review moves it to that round.
+    let next = cli(&dir, "status", &["T1", "started", "--no-dispatch"]);
+    assert_eq!(next.code, 0, "{}", next.stderr);
+    let next = cli(&dir, "status", &["T1", "review", "--artifact", shot]);
+    assert_eq!(next.code, 0, "{}", next.stderr);
+    let rows = artifacts(&dir, "T1");
+    assert_eq!(rows.len(), 2, "re-attaching does not duplicate");
+    assert_eq!(rows[0]["target"], shot);
+    assert_eq!(
+        rows[0]["round"], 3,
+        "re-attached artifact joins the new round"
+    );
+
+    // A plain add of an existing target leaves its round alone.
+    let next = cli(&dir, "artifacts", &["T1", "add", shot]);
+    assert_eq!(next.code, 0, "{}", next.stderr);
+    assert_eq!(artifacts(&dir, "T1")[0]["round"], 3);
 }
 
 /// The seeded id is stable for one board; read it back instead of re-seeding.

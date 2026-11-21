@@ -30,6 +30,7 @@ fn main() -> ExitCode {
         Surface::Add
         | Surface::Steps
         | Surface::Checks
+        | Surface::Artifacts
         | Surface::List
         | Surface::Status
         | Surface::Reply

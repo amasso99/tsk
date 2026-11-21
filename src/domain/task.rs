@@ -2686,7 +2686,9 @@ impl DomainState {
     }
 
     /// Attach one artifact, or update the label of one already attached to the same target.
-    /// Repeating the add without a new label is a no-op. Both paths are one undo entry.
+    /// A non-zero `round` different from the attached one moves the artifact to that round, so
+    /// a PR attached again on a later review shows under that review. Repeating the add with
+    /// nothing new is a no-op. Every change is one undo entry.
     pub fn add_artifact(
         &mut self,
         id: Uuid,
@@ -2699,11 +2701,19 @@ impl DomainState {
         let at = SystemTime::now();
         let task = self.task_mut(id)?;
         let changed = match task.artifacts.iter_mut().find(|a| a.target == target) {
-            Some(existing) if label.is_some() && existing.label != label => {
-                existing.label = label;
-                true
+            Some(existing) => {
+                let relabel = label.is_some() && existing.label != label;
+                let reround = round != 0 && existing.round != round;
+                if relabel {
+                    existing.label = label;
+                }
+                if reround {
+                    existing.round = round;
+                    existing.by = by.to_string();
+                    existing.at = at;
+                }
+                relabel || reround
             }
-            Some(_) => false,
             None => {
                 task.artifacts.push(Artifact {
                     target: target.clone(),

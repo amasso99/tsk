@@ -10,6 +10,7 @@ pub enum Surface {
     Add,
     Steps,
     Checks,
+    Artifacts,
     List,
     Status,
     Reply,
@@ -114,6 +115,7 @@ pub fn route<S: AsRef<str>>(
             "add" => Surface::Add,
             "steps" => Surface::Steps,
             "checks" => Surface::Checks,
+            "artifacts" => Surface::Artifacts,
             "list" => Surface::List,
             "status" => Surface::Status,
             "reply" => Surface::Reply,
@@ -256,6 +258,17 @@ mod tests {
         assert_eq!(
             route(["tsk", "checks", "T12", "set", "1", "passed"], None),
             Surface::Checks
+        );
+    }
+
+    #[test]
+    fn artifacts_positional_selects_artifacts_surface() {
+        assert_eq!(
+            route(
+                ["tsk", "artifacts", "T12", "add", "https://example.com"],
+                None
+            ),
+            Surface::Artifacts
         );
     }
 
